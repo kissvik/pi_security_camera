@@ -1,6 +1,7 @@
 
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+from mail import sending_email
 import argparse
 import warnings
 import datetime
@@ -9,14 +10,20 @@ import json
 import time
 import cv2
 
+
+last_email_sending = 0
+email_sending_interval = 60 
+
 ap = argparse.ArgumentParser()
 ap.add_argument("-c", "--conf", required=True,
-	help="A konfigurációs JSON file elérési útvonala")
+	help="A konfigurációs fájl elérési útvonala.")
 args = vars(ap.parse_args())
 
 conf = json.load(open(args["conf"]))
 
-
+honnan = conf["fromaddr"]
+hova = conf["toaddr"]
+jelszo = conf["password"]
 picamera = PiCamera()
 picamera.resolution = tuple(conf["resolution"])
 picamera.framerate = conf["fps"]
@@ -60,6 +67,17 @@ for f in picamera.capture_continuous(rawCapture, format="bgr", use_video_port=Tr
 		(x, y, w, h) = cv2.boundingRect(c)
 		cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
 		
+		if ((time.time() - last_email_sending) > email_sending_interval):
+			last_email_sending = time.time()
+			ts = timestamp.strftime("%I_%M_%S%p")
+			path = ts + ".jpg"
+			if (cv2.imwrite(path, frame)):
+				print("[INFO] A kep mentese sikeres, e-mail küldése folyamatban..")
+				
+				sending_email(path,honnan,hova,jelszo)
+			else: 
+				print("A kep mentese sikertelen")
+					
  
 	ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
 	cv2.putText(frame, ts, (10, frame.shape[0] - 10), cv2.FONT_HERSHEY_SIMPLEX,
@@ -73,3 +91,4 @@ for f in picamera.capture_continuous(rawCapture, format="bgr", use_video_port=Tr
 			break
  
 	rawCapture.truncate(0)
+
