@@ -2,7 +2,7 @@
     "show_video": true,
     "fromaddr": "kissvikpicamera@gmail.com",
     "toaddr": "viktorkiss920209@gmail.com",
-    "password": "Security_Pi_4",
+    "password": "",
     "min_upload_seconds": 3.0,
     "min_motion_frames": 8,
     "camera_warmup_time": 2.5,
