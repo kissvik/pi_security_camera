@@ -6,7 +6,7 @@ from mail import sending_email
 
 def motion_detection(video_stream, from_address, to_address, password):
     # A függvény paraméterül kapja magát a video stream-ot valamint az
-    # email elküldéséhez szükséges infromációkat.
+    # e-mail elküldéséhez szükséges infromációkat.
 
     last_email_sending = 0
     # A script indításakor a segédváltozó amely az utolsó e-mail elküldésének
@@ -30,7 +30,7 @@ def motion_detection(video_stream, from_address, to_address, password):
         #Színesből szürkeárnyalatos kép előállítása.
 
         gray = cv2.GaussianBlur(gray, (21, 21), 0)
-        #Gaussian Blur szűrő alkalmazása.
+        #Gaussian szűrő alkalmazása.
 
         ts = timestamp.strftime("%A %d %B %Y %I:%M:%S%p")
 
@@ -45,12 +45,11 @@ def motion_detection(video_stream, from_address, to_address, password):
         #és a már meglévő háttér közötti súlyozott átlagot.
 
         frameDelta = cv2.absdiff(gray, cv2.convertScaleAbs(background))
-        # Az abszolút különbség kiszámolásra került a bemeneti képkocka és a
-        # háttér között
+        # Az abszolút különbség kiszámolásra került a bemeneti képkocka és a háttér között
 
 
         thresh = cv2.threshold(frameDelta, conf["delta_thresh"], 255, cv2.THRESH_BINARY)[1]
-        # Az összes pixel amelynek különbsége nagyobb a paraméternél kapott értéknél, az 255 (fehér) re kerül állításra
+        # Az összes pixel amelynek különbsége nagyobb a paraméternél kapott értéknél, az 255-re(fehér) kerül állításra
         # máskülönben 0-ra (fekete) kerülnek beállításra.
 
         thresh = cv2.erode(thresh, None, iterations=2)
@@ -81,7 +80,7 @@ def motion_detection(video_stream, from_address, to_address, password):
 
                 timestamp = datetime.datetime.now()
                 ts = timestamp.strftime("%d_%B_%Y %I_%M_%S%p")
-                #időbélyegkerül elkésíztésre az egyedi fájl névhez.
+                #időbélyegkerül elkészítésre az egyedi fájlnévhez.
 
                 path = ts + ".jpg"
                 # A kimentendő képkocka elérési útjának megadása.
@@ -89,7 +88,7 @@ def motion_detection(video_stream, from_address, to_address, password):
                     print("[INFO] A kep mentese sikeres, e-mail küldése folyamatban..")
 
                     sending_email(path, from_address, to_address, password)
-                    #amennyiben sikeres a képkocka kimentése az e-mail üzenet elküldésre kerül.
+                    #Amennyiben sikeres a képkocka kimentése az e-mail üzenet elküldésre kerül.
                 else:
                     print("A kep mentese sikertelen")
 
@@ -116,22 +115,22 @@ def stream(video_stream):
 
 def app_run(ip,port):
     app.run(host=ip, port=port, debug=True, threaded=True, use_reloader=False)
-    #A Flask applikáció elindítására szolgáló függvény, melynke paraméterei határozzak meg az elérési IP címet és port számot.
+    # A Flask applikáció elindítására szolgáló függvény, melynek paraméterei határozzak meg az elérési IP címet és port számot.
 
 
 app = Flask(__name__)
-#A Flask objektum inicializálása.
+# A Flask objektum inicializálása.
 
 @app.route("/")
 def index():
     return render_template("index.html")
 # A rendre_template meghívásra került a készített HTML fájlra.
-# AZ app.route jelzi hogy az alattá található fügvény egy URL végpont amely a megadott heylen érhető el.
+# AZ app.route jelzi, hogy az alatta található fügvény egy URL végpont amely a megadott helyen érhető el.
 
 @app.route("/video_feed")
 def video_feed():
     return Response(stream(video_stream), mimetype="multipart/x-mixed-replace; boundary=frame")
-#Fenti függvény a videó stream outputja, mely byte töbé került kódolásra, mely formátumot a böngésző használni tudja a megjelenítéshez.
+# Fenti függvény a videó stream outputja, mely byte töbé került kódolásra, mely formátumot a böngésző használni tudja a megjelenítéshez.
 
 
 if __name__ == '__main__':
@@ -139,27 +138,25 @@ if __name__ == '__main__':
     ap = argparse.ArgumentParser()
     ap.add_argument("-c", "--conf", required=True, help="A konfigurációs fájl elérési útvonala.")
     args = vars(ap.parse_args())
-    #A parancssoros argumentumok feldolgozása.
+    # A parancssoros argumentumok feldolgozása.
 
     conf = json.load(open(args["conf"]))
-    #A szükséges beállításokat tartalmazó json fájl beolvasása.
+    # A szükséges beállításokat tartalmazó json fájl beolvasása.
 
     from_address = conf["fromaddr"]
     to_address = conf["toaddr"]
     password = conf["password"]
     ip = conf["ip"]
     port = conf["port"]
-    #A felhasználó által megadott paraméterek felhasználása.
+    # A felhasználó által megadott paraméterek felhasználása.
 
     # video_stream = VideoStream(usePiCamera=1).start()
     video_stream = VideoStream(src=0).start()
-    #A kamera elindítása elindítása.
+    # A kamera elindítása elindítása.
 
     thread1 = threading.Thread(target=app_run, args=(ip,port,))
     thread1.start()
     thread2 = threading.Thread(target=motion_detection, args=(video_stream, from_address, to_address, password))
     thread2.start()
-    #A párhuzamos futás elérése érdekében threadok felhasználásával kerül elindításra a mozgásrézékelést végrehajtó
-    #illetve a video streamot végrehajtó függvények.
-
-
+    # A párhuzamos futás elérése érdekében threadok felhasználásával kerül elindításra a mozgásrézékelést végrehajtó
+    # illetve a video streamot végrehajtó függvények.
